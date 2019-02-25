@@ -1,0 +1,9 @@
+*.class
+*.iml
+.idea
+*.ipr
+*.iws
+.gradle
+gradle
+.gradletasknamecache
+gradlew*
