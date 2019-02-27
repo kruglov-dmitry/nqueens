@@ -1,10 +1,12 @@
+import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 class Permutator {
     private int N;
-    private int totalPermutations;
+    private BigInteger totalPermutations;
+
     private List<Integer> positions;
     private Set<List<Integer>> permutations = new HashSet<>();
 
@@ -15,9 +17,11 @@ class Permutator {
 
         N = size;
 
-        totalPermutations = 1;
-        for (int i = 1; i<N+1; i++)
-            totalPermutations *= i;
+        // FIXME should take into account lack of dublicate within rows & columns!
+        totalPermutations = new BigInteger("1");
+        for (int i = 1; i <= N; i++) {
+            totalPermutations = totalPermutations.multiply(new BigInteger(i + ""));
+        }
 
         positions = IntStream.rangeClosed(0, N-1).boxed().collect(Collectors.toList());
         resetPositions();
@@ -29,17 +33,15 @@ class Permutator {
         positions.add(1);
         positions.add(2);
         positions.add(0);*/
-
-        System.out.println("Initial positions: " + positions);
-
     };
 
-    int getTotalPermutations() {
+    BigInteger getTotalPermutations() {
         return totalPermutations;
     }
 
     void resetPositions() {
         Collections.shuffle(positions);
+        System.out.println("Initial positions: " + positions);
     }
 
     private void permute() {

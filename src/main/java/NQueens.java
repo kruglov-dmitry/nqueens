@@ -1,5 +1,5 @@
+import java.math.BigInteger;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class NQueens {
 
@@ -165,55 +165,125 @@ public class NQueens {
         void showSolution() {
             Set<List<Integer>> cached = new HashSet<>();
 
-            while(cached.size() < t.getTotalPermutations()) {
+            while(BigInteger.valueOf(cached.size()).compareTo(t.getTotalPermutations()) < 0) {
                 if (!cached.contains(t.getPermutations())) {
-                    cached.add(t.getPermutations());
-                    System.out.println(Arrays.toString((t.getPermutations().toArray())));
-                }
+                    // FIXME TODO: after we have more than Integer.MAX_VALUE elements within set time to get anxious
+                    // System.out.println(Arrays.toString((t.getPermutations().toArray())));
 
-                do {
+                    do {
+                        List<Integer> queensPositions = t.getPermutations();
 
-                    List<Integer> queensPositions = t.getPermutations();
+                        if (!cached.contains(queensPositions)) {
+                            cached.add(queensPositions);
 
-                    System.out.println("Positions:" + queensPositions);
+                            // System.out.println("Positions:" + queensPositions);
 
-                    fillCollisions(queensPositions);
+                            fillCollisions(queensPositions);
 
-                    int numberOfCollisions = getNumberOfCollisions();
+                            int numberOfCollisions = getNumberOfCollisions();
 
-                    if (numberOfCollisions == 0) {
-                        showBoard(queensPositions);
-                        return;
-                    }
+                            if (numberOfCollisions == 0) {
+                                showBoard(queensPositions);
+                                return;
+                            }
 
-                    for (int i = 0; i < boardSize; i++) {
-                        for (int j = i + 1; j < boardSize; j++) {
-                            if (queenAttacked(queensPositions, i) || queenAttacked(queensPositions, j)) {
+                            boolean cycle_exit = false;
 
-                                updateBefore(queensPositions, i, j);
-                                Collections.swap(queensPositions, i, j);
-                                updateAfter(queensPositions, i, j);
+                            for (int i = 0; i < boardSize; i++) {
+                                for (int j = i + 1; j < boardSize; j++) {
+                                    if (queenAttacked(queensPositions, i) || queenAttacked(queensPositions, j)) {
 
-                                int newNumberOfCollisions = getNumberOfCollisions();
+                                        updateBefore(queensPositions, i, j);
+                                        Collections.swap(queensPositions, i, j);
+                                        updateAfter(queensPositions, i, j);
 
-                                if (newNumberOfCollisions > numberOfCollisions) {
-                                    updateBefore(queensPositions, i, j);
-                                    Collections.swap(queensPositions, i, j);
-                                    updateAfter(queensPositions, i, j);
+                                        // cache current permutation
+                                        if (cached.contains(queensPositions)) {
+                                            cycle_exit = true;
+                                            break;
+                                        }
+                                        cached.add(queensPositions);
+
+                                        int newNumberOfCollisions = getNumberOfCollisions();
+
+                                        if (newNumberOfCollisions > numberOfCollisions) {
+                                            updateBefore(queensPositions, i, j);
+                                            Collections.swap(queensPositions, i, j);
+                                            updateAfter(queensPositions, i, j);
+                                        }
+
+                                        if (newNumberOfCollisions == 0) {
+                                            showBoard(queensPositions);
+                                            return;
+                                        }
+                                    }
                                 }
 
-                                if (newNumberOfCollisions == 0) {
-                                    showBoard(queensPositions);
-                                    return;
-                                }
+                                if (cycle_exit)
+                                    break;
+
                             }
                         }
-                    }
-
-                } while (t.nextPermutationExist());
+                    } while (t.nextPermutationExist());
+                }
 
                 t.resetPositions();
             }
+
+            // iterate over pairs - classic approach - ???
+            // iterate over triplets - special conditions - ???
+
+            //            String u = t.getPermutations().stream().map(Object::toString)
+            //                    .collect(Collectors.joining(", "));
+
+        };
+
+        void showSolutionNoCache() {
+
+            while(true) {
+
+                    do {
+                        List<Integer> queensPositions = t.getPermutations();
+
+                        // System.out.println("Positions:" + queensPositions);
+
+                        fillCollisions(queensPositions);
+
+                        int numberOfCollisions = getNumberOfCollisions();
+
+                        if (numberOfCollisions == 0) {
+                            showBoard(queensPositions);
+                            return;
+                        }
+
+                        boolean cycle_exit = false;
+
+                        for (int i = 0; i < boardSize; i++) {
+                            for (int j = i + 1; j < boardSize; j++) {
+                                if (queenAttacked(queensPositions, i) || queenAttacked(queensPositions, j)) {
+                                    updateBefore(queensPositions, i, j);
+                                    Collections.swap(queensPositions, i, j);
+                                    updateAfter(queensPositions, i, j);
+
+                                    int newNumberOfCollisions = getNumberOfCollisions();
+
+                                    if (newNumberOfCollisions > numberOfCollisions) {
+                                        updateBefore(queensPositions, i, j);
+                                        Collections.swap(queensPositions, i, j);
+                                        updateAfter(queensPositions, i, j);
+                                    }
+
+                                    if (newNumberOfCollisions == 0) {
+                                        showBoard(queensPositions);
+                                        return;
+                                    }
+                                }
+                            }
+                        }
+
+                    } while (t.nextPermutationExist());
+                    t.resetPositions();
+                }
 
             // iterate over pairs - classic approach - ???
             // iterate over triplets - special conditions - ???
@@ -232,9 +302,9 @@ public class NQueens {
         void checkReset() {
             Set<List<Integer>> cached = new HashSet<>();
 
-            System.out.println(t.getTotalPermutations());
+            // System.out.println(t.getTotalPermutations());
 
-            while(cached.size() < t.getTotalPermutations()) {
+            while(BigInteger.valueOf(cached.size()).compareTo(t.getTotalPermutations()) < 0) {
                 if (!cached.contains(t.getPermutations())) {
                     cached.add(t.getPermutations());
                     System.out.println(Arrays.toString((t.getPermutations().toArray())));
@@ -260,7 +330,7 @@ public class NQueens {
 
         NQueenProblem Queen = new NQueenProblem(num);
 
-        Queen.showSolution();
+        Queen.showSolutionNoCache();
     }
 
     void run2(int num) {
