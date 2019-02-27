@@ -1,4 +1,5 @@
 ### Requirements
+- Java 8 or later
 
 ### How to build
 
