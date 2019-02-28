@@ -1,4 +1,5 @@
-import java.math.BigInteger;
+package dk.nqueens;
+
 import java.util.*;
 
 public class NQueens {
@@ -28,11 +29,21 @@ public class NQueens {
         int[] diagLeftBottomUp;
         int[] diagLeftTopDown;
 
+        boolean applyLineConstraint;
+        boolean forcePrint;
+
         Permutator t;
 
-        NQueenProblem(int _boardSize) {
+        NQueenProblem(int _boardSize, boolean _applyLineConstraint, boolean _forcePrint) {
 
             boardSize = _boardSize;
+            applyLineConstraint = _applyLineConstraint;
+
+            if (applyLineConstraint && boardSize < 8)
+                throw new IllegalArgumentException("Board size is less than 8 for three in line constrain - " + boardSize);
+
+            forcePrint = _forcePrint;
+
             numOfDiags = 2 * boardSize - 1;
 
             diagLeftBottomUp = new int[numOfDiags];
@@ -105,9 +116,8 @@ public class NQueens {
             return x + y;
         }
 
-        void updateBeforeSwap(List<Integer> queensPositions, int idx) {
-            int x = queensPositions.get(idx);
-            int y = idx;
+        void updateBeforeSwap(List<Integer> queensPositions, int y) {
+            int x = queensPositions.get(y);
 
             int diagNum = getDiagNumBottomUp(x, y);
 
@@ -123,9 +133,8 @@ public class NQueens {
             updateBeforeSwap(queensPositions, j);
         }
 
-        void updateAfterSwap(List<Integer> queensPositions, int idx) {
-            int x = queensPositions.get(idx);
-            int y = idx;
+        void updateAfterSwap(List<Integer> queensPositions, int y) {
+            int x = queensPositions.get(y);
 
             int diagNum = getDiagNumBottomUp(x, y);
 
@@ -154,15 +163,26 @@ public class NQueens {
             return collisionsNum;
         }
 
-        boolean queenAttacked(List<Integer> queensPositions, int idx) {
+        boolean queenAttacked(List<Integer> queensPositions, int y) {
 
-            int x = queensPositions.get(idx);
-            int y = idx;
+            int x = queensPositions.get(y);
 
             int diagNumBU = getDiagNumBottomUp(x, y);
             int diagNumTD = getDiagNumTopDown(x, y);
 
             return diagLeftBottomUp[diagNumBU] > 1 || diagLeftTopDown[diagNumTD] > 1;
+        }
+
+        boolean checkLines(List<Integer> queensPositions) {
+            Map<String, Set<String>> map = PointGrouper.groupPointsByLine(queensPositions);
+            for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
+                Set<String> queensOnTheSameLine = entry.getValue();
+                if (queensOnTheSameLine.size() > 2) {
+                    return false;
+                }
+            }
+            return true;
+            // return PointGrouper.groupPointsByLineExceedThreshold(queensPositions, 3);
         }
 
         void showSolutionNoCache() {
@@ -177,9 +197,28 @@ public class NQueens {
                         int numberOfCollisions = getNumberOfCollisions();
 
                         if (numberOfCollisions == 0) {
-                            showBoard(queensPositions);
-                            return;
+                            if (!applyLineConstraint || checkLines(queensPositions)) {
+                                showBoard(queensPositions, forcePrint);
+                                return;
+                            }
+
+                            if (applyLineConstraint)
+                                continue;
+
+                             /*if (applyLineConstraint) {
+                                 if (checkLines(queensPositions)) {
+                                     showBoard(queensPositions, forcePrint);
+                                     return;
+                                 } else {
+                                     continue;
+                                 }
+                             } else {
+                                 showBoard(queensPositions, forcePrint);
+                                 return;
+                             }*/
                         }
+
+                        boolean skipQueenSet = false;
 
                         for (int i = 0; i < boardSize; i++) {
                             for (int j = i + 1; j < boardSize; j++) {
@@ -200,32 +239,44 @@ public class NQueens {
                                     }
 
                                     if (newNumberOfCollisions == 0) {
-                                        showBoard(queensPositions);
-                                        return;
+                                        if (!applyLineConstraint || checkLines(queensPositions)) {
+                                            showBoard(queensPositions, forcePrint);
+                                            return;
+                                        }
+
+                                        if (applyLineConstraint) {
+                                            skipQueenSet = true;
+                                            break;
+                                        }
+
+                                        /*if (applyLineConstraint) {
+                                            if (checkLines(queensPositions)) {
+                                                showBoard(queensPositions, forcePrint);
+                                                return;
+                                            } else {
+                                                skipQueenSet = true;
+                                                break;
+                                            }
+                                        } else {
+                                            showBoard(queensPositions, forcePrint);
+                                            return;
+                                        } */
                                     }
                                 }
                             }
+                            if (skipQueenSet)
+                                break;
                         }
                     } while (t.nextPermutationExist());
                     t.resetPositions();
                 }
         };
-
-        void checkReset() {
-            Set<List<Integer>> cached = new HashSet<>();
-
-            while(BigInteger.valueOf(cached.size()).compareTo(t.getTotalPermutations()) < 0) {
-                if (!cached.contains(t.getPermutations())) {
-                    cached.add(t.getPermutations());
-                    System.out.println(Arrays.toString((t.getPermutations().toArray())));
-                }
-                t.resetPositions();
-            }
-        }
-
     };
 
-    void showBoard(List<Integer> queensPositions) {
+    private void showBoard(List<Integer> queensPositions, boolean forcePrint) {
+        if (queensPositions.size() > 1000 && !forcePrint)
+            return;
+
         for (int i = 0; i < queensPositions.size(); i++) {
             for (int j = 0; j < queensPositions.size(); j++)
                 if (queensPositions.get(i) != j)
@@ -236,18 +287,11 @@ public class NQueens {
         }
     }
 
-    void setQueens(int num) {
+    private void setQueens(int num, boolean applyLineConstraint, boolean forcePrint) {
 
-        NQueenProblem Queen = new NQueenProblem(num);
+        NQueenProblem Queen = new NQueenProblem(num, applyLineConstraint, forcePrint);
 
         Queen.showSolutionNoCache();
-    }
-
-    void run2(int num) {
-        NQueenProblem Queen = new NQueenProblem(num);
-
-        // Queen.showPermutations();
-        Queen.checkReset();
     }
 
     public static void main(String[] args) {
@@ -260,8 +304,29 @@ public class NQueens {
             System.exit(1);
         }
 
-        NQueens u = new NQueens();
-        u.setQueens(num);
+        boolean applyLineConstraint = true;
+        boolean forcePrint = false;
 
+        if (args.length > 1) {
+            try {
+                applyLineConstraint = Boolean.parseBoolean(args[1]);
+            } catch (NumberFormatException nfe) {
+                System.out.println("if you decided to specify Three-in-line constrain flag please note that it can be only true or false as string");
+                System.exit(1);
+            }
+        }
+
+        if (args.length > 2) {
+            try {
+                forcePrint = Boolean.parseBoolean(args[2]);
+            }
+            catch (NumberFormatException nfe) {
+                System.out.println("if you decided to specify Force-print flag please note that it can be only true or false as string");
+                System.exit(1);
+            }
+        }
+
+        NQueens u = new NQueens();
+        u.setQueens(num, applyLineConstraint, forcePrint);
     }
 }
