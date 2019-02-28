@@ -40,4 +40,4 @@ Initial idea based on `iterative repair` algorithm i.e. set all queens on the bo
 penalty factor: i.e. number of queens on the same line of board.
 Detailed description can be found at following paper: [A Polynomial Time Algorithm for the N-Queens Problem](http://citeseerx.ist.psu.edu/viewdoc/download;jsessionid=4DC9292839FE7B1AFABA1EDB8183242C?doi=10.1.1.57.4685&rep=rep1&type=pdf)
 As soon as we find permutation that do not have any queens clash - we apply point grouping or counting 
-to group lines based on line equation `y = Ax + B`, grouping `A` and `B` to keys for accamulating points related to that line. 
+to group lines based on line equation `y = Ax + B`, grouping `A` and `B` to keys for accumulating points related to that line. 
